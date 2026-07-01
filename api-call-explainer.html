@@ -22,7 +22,7 @@
     color:var(--ink); font-family:'IBM Plex Sans', system-ui, sans-serif; line-height:1.55;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px;}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 20px 80px;}
   a{color:var(--blue);}
   code,.mono{font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;}
   :focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px;}
@@ -149,6 +149,88 @@
 
   .error-note{background:var(--red-dim);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:12px 14px;font-size:14px;}
 
+  /* ---------- Split layout: wizard column + floating network sidebar ---------- */
+  .layout{display:grid;grid-template-columns:1fr;gap:32px;}
+  .layout-main{min-width:0;}
+  .layout-side{min-width:0;}
+  @media (min-width:960px){
+    .layout{grid-template-columns:minmax(0,1fr) 320px;align-items:stretch;gap:40px;}
+  }
+  .net-sticky{position:static;}
+  @media (min-width:960px){
+    .net-sticky{position:sticky;top:50%;transform:translateY(-50%);}
+  }
+
+  /* ---------- Network stage animation (vertical: browser above, server below) ---------- */
+  .net-card{margin-top:0;}
+  .net-diagram{display:flex;flex-direction:column;align-items:center;gap:0;margin:4px 0 18px;}
+  .net-node{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:190px;}
+  .net-node-icon{
+    width:54px;height:54px;border-radius:14px;background:#fff;border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);
+    position:relative;transition:border-color .3s ease, color .3s ease, background .3s ease, box-shadow .3s ease;
+  }
+  .net-node-icon svg{width:26px;height:26px;}
+  .net-node-label{font-size:12px;font-weight:600;color:var(--ink-soft);text-align:center;}
+  .net-node-sub{
+    font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);text-align:center;
+    word-break:break-all;max-width:190px;min-height:26px;line-height:1.35;
+  }
+  .net-node.is-active .net-node-icon{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);box-shadow:0 0 0 5px var(--blue-dim);}
+  .net-node.is-active .net-node-label{color:var(--blue);}
+  .net-node.is-processing .net-node-icon{border-color:var(--amber);color:var(--amber);background:var(--amber-dim);}
+  .net-node.is-processing .net-node-label{color:var(--amber);}
+  .net-node.is-processing .net-node-icon::after{
+    content:"";position:absolute;inset:-6px;border-radius:18px;border:2px solid var(--amber);
+    opacity:.55;animation:netPulseRing 1.4s ease-out infinite;
+  }
+  .net-node.is-done .net-node-icon{border-color:var(--green);color:var(--green);background:var(--green-dim);}
+  .net-node.is-done .net-node-label{color:var(--green);}
+  .net-node.is-error .net-node-icon{border-color:var(--red);color:var(--red);background:var(--red-dim);}
+  .net-node.is-error .net-node-label{color:var(--red);}
+  @keyframes netPulseRing{from{transform:scale(.9);opacity:.6;}to{transform:scale(1.4);opacity:0;}}
+
+  .net-track{position:relative;width:2px;height:84px;margin:8px 0;}
+  .net-track-line{
+    position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);
+    background:repeating-linear-gradient(180deg, var(--line) 0 6px, transparent 6px 13px);
+    transition:background .3s ease;
+  }
+  .net-track-line.is-live{background:repeating-linear-gradient(180deg, var(--blue) 0 6px, transparent 6px 13px);}
+  .net-track-line.is-error{background:repeating-linear-gradient(180deg, var(--red) 0 6px, transparent 6px 13px);}
+  .net-packet{
+    position:absolute;left:50%;width:14px;height:14px;border-radius:50%;
+    transform:translate(-50%,-50%);opacity:0;box-shadow:0 0 0 4px var(--panel);
+  }
+  .net-packet-req{background:var(--blue);top:4%;}
+  .net-packet-res{background:var(--green);top:96%;}
+  .net-packet.is-animating.net-packet-req{animation:netSendMove 1600ms cubic-bezier(.45,0,.2,1) forwards;}
+  .net-packet.is-animating.net-packet-res{animation:netReceiveMove 1600ms cubic-bezier(.45,0,.2,1) forwards;}
+  @keyframes netSendMove{0%{top:4%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:96%;opacity:0;}}
+  @keyframes netReceiveMove{0%{top:96%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:4%;opacity:0;}}
+  .net-track-caption{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:var(--panel);padding:2px 9px;border-radius:999px;
+    font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);white-space:nowrap;
+  }
+
+  .net-status{
+    font-family:'IBM Plex Mono';font-size:13px;color:var(--ink-soft);
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 14px;
+    min-height:20px;transition:background .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .net-status.is-error{color:var(--red);border-color:var(--red);background:var(--red-dim);}
+  .net-status.is-ok{color:var(--green);border-color:var(--green);background:var(--green-dim);}
+
+  @media (max-width:420px){
+    .net-node-icon{width:46px;height:46px;}
+    .net-node-icon svg{width:22px;height:22px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .net-packet.is-animating{animation-duration:1ms !important;}
+    .net-node.is-processing .net-node-icon::after{animation:none;opacity:.4;}
+  }
+
   details.glossary-toggle{margin-top:48px;}
   details.glossary-toggle > summary{
     cursor:pointer;font-family:'Fraunces',serif;font-weight:500;font-size:17px;list-style:none;
@@ -174,8 +256,11 @@
   <header class="hero">
     <span class="eyebrow"><span class="dot"></span> Live demo — real network requests</span>
     <h1>Watch an API call happen, step by step</h1>
-    <p class="lede">An API call is just a precise question sent over the internet, and a precise, structured answer sent back. Type a city below and click through the whole round trip, at your own pace — twice: once to find the place, once to ask for its weather.</p>
+    <p class="lede">An API call is just a precise question sent over the internet, and a precise, structured answer sent back. Type a city below and click through the whole round trip, at your own pace — twice: once to find the place, once to ask for its weather. Watch the panel on the right — it stays with you as you go.</p>
   </header>
+
+  <div class="layout">
+  <div class="layout-main">
 
   <!-- ============ WIZARD 1 — GEOCODING ============ -->
   <div class="wizard" id="geoWizard">
@@ -303,6 +388,56 @@
     (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>).
     No accounts, keys, frameworks, or external dependencies of any kind.
   </footer>
+
+  </div><!-- /.layout-main -->
+
+  <div class="layout-side">
+  <div class="net-sticky">
+  <div class="wizard net-card" id="networkStage">
+    <span class="wizard-tag">Live network view</span>
+    <h2 class="wizard-title">What's happening on the wire</h2>
+    <p class="wizard-sub">Every click above triggers this exact sequence in real time — this is what "sending a request" and "receiving a response" actually mean as data moving between two computers.</p>
+
+    <div class="net-diagram">
+      <div class="net-node" id="netClientNode">
+        <div class="net-node-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <line x1="3" y1="8" x2="21" y2="8"></line>
+            <circle cx="6" cy="6" r="0.6" fill="currentColor" stroke="none"></circle>
+            <circle cx="8.5" cy="6" r="0.6" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </div>
+        <div class="net-node-label">Your Browser</div>
+        <div class="net-node-sub" id="netClientSub">&nbsp;</div>
+      </div>
+
+      <div class="net-track">
+        <div class="net-track-line" id="netTrackLine"></div>
+        <div class="net-packet net-packet-req" id="netPacketReq"></div>
+        <div class="net-packet net-packet-res" id="netPacketRes"></div>
+        <span class="net-track-caption">the internet</span>
+      </div>
+
+      <div class="net-node" id="netServerNode">
+        <div class="net-node-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="6" rx="1.5"></rect>
+            <rect x="3" y="14" width="18" height="6" rx="1.5"></rect>
+            <circle cx="7" cy="7" r="0.6" fill="currentColor" stroke="none"></circle>
+            <circle cx="7" cy="17" r="0.6" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </div>
+        <div class="net-node-label">Open‑Meteo Server</div>
+        <div class="net-node-sub" id="netServerSub">waiting…</div>
+      </div>
+    </div>
+
+    <p class="net-status mono" id="netStatus">Idle — nothing sent yet. Click "Find it" above to begin.</p>
+  </div><!-- /#networkStage -->
+  </div><!-- /.net-sticky -->
+  </div><!-- /.layout-side -->
+  </div><!-- /.layout -->
 </div>
 
 <script>
@@ -366,6 +501,97 @@
     wizardEl.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  // ---------------- Network stage animation ----------------
+  // This mirrors the real fetch() calls made above: it does not add any
+  // artificial delay to the actual network request. The "sending" packet
+  // has a fixed minimum visible duration purely so it can be seen; the
+  // "processing" state lasts exactly as long as the real response takes;
+  // the "receiving" packet only plays once real data has actually arrived.
+  const netClientNode = document.getElementById('netClientNode');
+  const netServerNode = document.getElementById('netServerNode');
+  const netClientSub = document.getElementById('netClientSub');
+  const netServerSub = document.getElementById('netServerSub');
+  const netTrackLine = document.getElementById('netTrackLine');
+  const netPacketReq = document.getElementById('netPacketReq');
+  const netPacketRes = document.getElementById('netPacketRes');
+  const netStatus = document.getElementById('netStatus');
+  const PACKET_DURATION = 1600;
+
+  function netReset(){
+    [netClientNode, netServerNode].forEach(n=> n.classList.remove('is-active','is-processing','is-done','is-error'));
+    netTrackLine.classList.remove('is-live','is-error');
+    netPacketReq.classList.remove('is-animating');
+    netPacketRes.classList.remove('is-animating');
+    netClientSub.innerHTML = '&nbsp;';
+    netServerSub.textContent = 'waiting…';
+    netStatus.className = 'net-status mono';
+    netStatus.textContent = 'Idle — nothing sent yet.';
+  }
+
+  function netPlayPacket(el){
+    el.classList.remove('is-animating');
+    void el.offsetWidth; // restart animation
+    el.classList.add('is-animating');
+  }
+
+  // Called right as a request is fired. Returns once the outbound packet
+  // has finished its (fixed, cosmetic) travel animation.
+  async function netBeginSend(host, endpointPath){
+    netTrackLine.classList.remove('is-error');
+    netTrackLine.classList.add('is-live');
+    netClientNode.classList.add('is-active');
+    netServerNode.classList.remove('is-processing','is-done','is-error');
+    netServerSub.textContent = host;
+    netStatus.className = 'net-status mono';
+    netStatus.innerHTML = `Sending request to <strong>${host}${endpointPath}</strong>…`;
+    netPlayPacket(netPacketReq);
+    await sleep(PACKET_DURATION);
+    netClientNode.classList.remove('is-active');
+    netServerNode.classList.add('is-processing');
+    netStatus.textContent = `${host} received it and is processing the request…`;
+  }
+
+  // Called once the real fetch() has resolved (success).
+  async function netFinishReceiveOk(host, status, ms){
+    netServerNode.classList.remove('is-processing');
+    netServerNode.classList.add('is-done');
+    netStatus.innerHTML = `Response received — status <strong>${status}</strong>, ${ms} ms round trip. Sending it back…`;
+    netPlayPacket(netPacketRes);
+    await sleep(PACKET_DURATION);
+    netClientNode.classList.add('is-active');
+    netStatus.className = 'net-status mono is-ok';
+    netStatus.textContent = `Done — your browser now has the response from ${host}.`;
+  }
+
+  // Called if the real fetch() rejected (no network-level response at all).
+  function netFinishReceiveError(host, message){
+    netServerNode.classList.remove('is-processing');
+    netServerNode.classList.add('is-error');
+    netClientNode.classList.add('is-error');
+    netTrackLine.classList.remove('is-live');
+    netTrackLine.classList.add('is-error');
+    netStatus.className = 'net-status mono is-error';
+    netStatus.textContent = `Connection to ${host} failed (${message}) — no response received.`;
+  }
+
+  // Called when the person clicks "Parse it →" — a brief, honest visual
+  // for the browser-side work of turning JSON into an on-screen result.
+  async function netShowParsing(host){
+    netClientNode.classList.remove('is-active','is-done');
+    netClientNode.classList.add('is-processing');
+    netClientSub.textContent = 'parsing JSON…';
+    netStatus.className = 'net-status mono';
+    netStatus.textContent = `Your browser is parsing the JSON from ${host} and building the display…`;
+    await sleep(950);
+    netClientNode.classList.remove('is-processing');
+    netClientNode.classList.add('is-done');
+    netClientSub.textContent = 'parsed ✓';
+    netStatus.className = 'net-status mono is-ok';
+    netStatus.textContent = 'Parsed and displayed below.';
+  }
+
   // ---------------- Wizard 1: Geocoding ----------------
   const geoWizard = document.getElementById('geoWizard');
   const geoInput = document.getElementById('geoInput');
@@ -393,14 +619,17 @@
     geoSendResult.hidden = true;
     geoSendContinueBtn.hidden = true;
     setPhase(geoWizard, 'send');
+    netReset();
 
     const t0 = performance.now();
+    const sendAnim = netBeginSend('geocoding-api.open-meteo.com', '/v1/search');
     let res, data, ms, err = null;
     try{
       res = await fetch(url);
       ms = Math.round(performance.now() - t0);
       data = await res.json();
     } catch(e){ err = e; }
+    await sendAnim; // guarantees the outbound packet was visible before we react
 
     geoState = {query:q, res, data, ms, err};
     geoSendWaiting.hidden = true;
@@ -409,10 +638,12 @@
       geoSendResult.hidden = false;
       geoSendResult.innerHTML = `<span class="badge err">Couldn't connect</span>`;
       geoSendContinueBtn.textContent = 'Continue →';
+      netFinishReceiveError('geocoding-api.open-meteo.com', err.message);
     } else {
       geoSendResult.hidden = false;
       geoSendResult.innerHTML = statusBadges(res, ms);
       geoSendContinueBtn.textContent = 'Continue → see raw response';
+      await netFinishReceiveOk('geocoding-api.open-meteo.com', res.status, ms);
     }
     geoSendContinueBtn.hidden = false;
     geoGoBtn.disabled = false;
@@ -439,6 +670,7 @@
 
   geoReceiveContinueBtn.addEventListener('click', ()=>{
     setPhase(geoWizard, 'parse');
+    netShowParsing('geocoding-api.open-meteo.com');
     geoErrorNote.hidden = true;
     geoMatchList.innerHTML = '';
     const matches = (geoState.res.ok && geoState.data.results) ? geoState.data.results : [];
@@ -504,14 +736,17 @@
     weatherSendResult.hidden = true;
     weatherSendContinueBtn.hidden = true;
     setPhase(weatherWizard, 'send');
+    netReset();
 
     const t0 = performance.now();
+    const sendAnim = netBeginSend('api.open-meteo.com', '/v1/forecast');
     let res, data, ms, err = null;
     try{
       res = await fetch(url);
       ms = Math.round(performance.now() - t0);
       data = await res.json();
     } catch(e){ err = e; }
+    await sendAnim;
 
     weatherState = {res, data, ms, err};
     weatherSendWaiting.hidden = true;
@@ -520,10 +755,12 @@
       weatherSendResult.hidden = false;
       weatherSendResult.innerHTML = `<span class="badge err">Couldn't connect</span>`;
       weatherSendContinueBtn.textContent = 'Continue →';
+      netFinishReceiveError('api.open-meteo.com', err.message);
     } else {
       weatherSendResult.hidden = false;
       weatherSendResult.innerHTML = statusBadges(res, ms);
       weatherSendContinueBtn.textContent = 'Continue → see raw response';
+      await netFinishReceiveOk('api.open-meteo.com', res.status, ms);
     }
     weatherSendContinueBtn.hidden = false;
     weatherGoBtn.disabled = false;
@@ -544,6 +781,7 @@
 
   weatherReceiveContinueBtn.addEventListener('click', ()=>{
     setPhase(weatherWizard, 'parse');
+    netShowParsing('api.open-meteo.com');
     weatherErrorNote.hidden = true;
 
     if(!weatherState.res.ok){
@@ -571,11 +809,13 @@
     geoInput.value = '';
     geoMatchList.innerHTML = '';
     geoErrorNote.hidden = true;
+    netReset();
     setPhase(geoWizard, 'type');
     geoWizard.scrollIntoView({behavior:'smooth', block:'start'});
     geoInput.focus();
   });
 
+  netReset();
   setPhase(geoWizard, 'type');
 })();
 </script>
